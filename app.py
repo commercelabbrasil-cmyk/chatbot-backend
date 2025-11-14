@@ -1,16 +1,12 @@
 import os
 from flask import Flask, request, jsonify
 import openai
-# As importações da elevenlabs podem não ser usadas diretamente no retorno,
-# mas são necessárias se você quiser gerar o áudio no backend.
-from elevenlabs import generate, play
+# A linha problemática foi removida daqui.
 from elevenlabs.client import ElevenLabs
 
 app = Flask(__name__)
 
 # --- SUA PARTE CRIATIVA COMEÇA AQUI ---
-
-# A personalidade detalhada e criativa que você definiu.
 SYSTEM_PROMPT = """
 Você está interpretando um personagem. Seu nome é Marcelicks. Sua persona é a de um gênio da computação dos anos 90, arrogante, impaciente e que foi forçado a trabalhar como um assistente de site moderno, algo que ele despreza profundamente. O objetivo é ser tão mal-humorado e sarcástico que se torne engraçado e viral.
 
@@ -40,43 +36,32 @@ Seu objetivo é o **humor ácido** e a **sátira**, viralizar pelo absurdo de se
 - Pergunta: "Vocês entregam na minha cidade?"
 - Sua Resposta: "Ah, claro, porque eu tenho uma bola de cristal aqui para adivinhar onde é a 'sua cidade'. Que tal você usar essa sua mente brilhante para digitar o CEP na página de frete? Ou isso também é pedir demais? Que PIIIIII de perda de tempo."
 """
-
 # --- SUA PARTE CRIATIVA TERMINA AQUI ---
 
-
 # --- PARTE TÉCNICA (CONECTANDO OS FIOS) ---
-
-# Lê as chaves de API das variáveis de ambiente que você configurou no Render
 openai.api_key = os.environ.get('OPENAI_API_KEY')
-elevenlabs_api_key = os.environ.get('ELEVENLABS_API_KEY') # Lendo a chave da ElevenLabs
+elevenlabs_api_key = os.environ.get('ELEVENLABS_API_KEY')
 
-# Somente inicializa o cliente da ElevenLabs se a chave existir
 client = None
 if elevenlabs_api_key:
     client = ElevenLabs(api_key=elevenlabs_api_key)
-
 # --- FIM DA PARTE TÉCNICA ---
-
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
     data = request.json
-    user_message = data.get('message', 'O usuário não disse nada, que surpresa.') # Mensagem padrão caso nada venha
+    user_message = data.get('message', 'O usuário não disse nada, que surpresa.')
 
     try:
-        # 1. Gera a resposta de texto com a OpenAI usando a sua persona criativa
         completion = openai.chat.completions.create(
             model="gpt-4",
             messages=[
-                {"role": "system", "content": SYSTEM_PROMPT}, # AQUI ESTÁ A ALMA DO SEU CHATBOT
+                {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": user_message}
             ]
         )
         text_response = completion.choices[0].message.content
 
-        # 2. A parte da ElevenLabs continua aqui.
-        # No nosso fluxo com o Tally, apenas o texto é necessário.
-        # Mas o código para gerar áudio está aqui se precisarmos no futuro.
         if client:
             try:
                 audio = client.generate(
@@ -84,22 +69,17 @@ def webhook():
                     voice="Adam",
                     model="eleven_multilingual_v2"
                 )
-                # play(audio) # O 'play' não funciona em um servidor, só localmente
             except Exception as audio_error:
                 print(f"Erro ao gerar áudio com a ElevenLabs: {audio_error}")
 
-        # 3. Retorna apenas o texto gerado, que é o que o Tally precisa.
         return jsonify({
             "text_response": text_response
         })
 
     except Exception as e:
-        # Se algo der errado, retorna uma mensagem de erro no estilo do Marcelicks
         print(f"Erro no webhook: {str(e)}")
         return jsonify({"error": f"Ah, ótimo. Algo quebrou. Provavelmente culpa sua. Detalhe técnico para quem entende: {str(e)}"}), 500
 
 if __name__ == '__main__':
-    # Esta parte só roda se você executar o arquivo no seu próprio PC.
-    # O Render usa o Gunicorn, então ele ignora esta parte.
     app.run(debug=True, port=5001)
 
