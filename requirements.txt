@@ -1,1 +1,4 @@
-Flask openai elevenlabs gunicorn
+Flask
+openai
+elevenlabs
+gunicorn
