@@ -1,4 +1,3 @@
-<!-- Versão 2 -->
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -30,11 +29,15 @@
         // --- CONFIGURAÇÃO IMPORTANTE ---
         const MARCELICKS_BRAIN_URL = 'https://chatbot-backend-marcelicks.onrender.com/webhook';
         
-        // Cole sua chave de API da ElevenLabs aqui. 
-        const ELEVENLABS_API_KEY = 'SUA_CHAVE_DA_ELEVENLABS_AQUI'; // LEMBRE-SE DE COLAR SUA CHAVE AQUI!
+        // ##################################################################
+        // #                                                                #
+        // # ==>   COLE SUA CHAVE DA ELEVENLABS DENTRO DAS ASPAS AQUI   <==   #
+        // #                                                                #
+        // ##################################################################
+        const ELEVENLABS_API_KEY = 'sk_c4ad606b09670023b115e27453732eb0ac4be7c88b34cd5e';
         
         // Esta é a ID da SUA VOZ personalizada.
-        const VOICE_ID = 'Q6KIuDWIIqpbbWefMg8U'; // <-- SUA VOZ AQUI!
+        const VOICE_ID = 'Q6KIuDWIIqpbbWefMg8U'; 
         // --- FIM DA CONFIGURAÇÃO ---
 
 
@@ -58,7 +61,14 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ message: userInput })
                 });
+
+                if (!textResponse.ok) {
+                    // Se o erro vier do nosso servidor (Ex: Internal Server Error)
+                    const errorData = await textResponse.json();
+                }
+
                 const data = await textResponse.json();
+                const marcelicksText = data.text_response;
 
                 responseDiv.innerText = marcelicksText;
                 responseDiv.style.display = 'block';
