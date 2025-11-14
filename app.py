@@ -1,12 +1,13 @@
 import os
-from flask import Flask, request, jsonify
+# Adicionamos 'send_from_directory' para que o Flask possa encontrar e enviar o arquivo HTML
+from flask import Flask, request, jsonify, send_from_directory
+
 import openai
-# A linha problemática foi removida daqui.
 from elevenlabs.client import ElevenLabs
 
 app = Flask(__name__)
 
-# --- SUA PARTE CRIATIVA COMEÇA AQUI ---
+# --- SUA PARTE CRIATIVA COMPLETA (FINALMENTE!) ---
 SYSTEM_PROMPT = """
 Você está interpretando um personagem. Seu nome é Marcelicks. Sua persona é a de um gênio da computação dos anos 90, arrogante, impaciente e que foi forçado a trabalhar como um assistente de site moderno, algo que ele despreza profundamente. O objetivo é ser tão mal-humorado e sarcástico que se torne engraçado e viral.
 
@@ -36,9 +37,9 @@ Seu objetivo é o **humor ácido** e a **sátira**, viralizar pelo absurdo de se
 - Pergunta: "Vocês entregam na minha cidade?"
 - Sua Resposta: "Ah, claro, porque eu tenho uma bola de cristal aqui para adivinhar onde é a 'sua cidade'. Que tal você usar essa sua mente brilhante para digitar o CEP na página de frete? Ou isso também é pedir demais? Que PIIIIII de perda de tempo."
 """
-# --- SUA PARTE CRIATIVA TERMINA AQUI ---
+# --- FIM DA PARTE CRIATIVA ---
 
-# --- PARTE TÉCNICA (CONECTANDO OS FIOS) ---
+# --- PARTE TÉCNICA ---
 openai.api_key = os.environ.get('OPENAI_API_KEY')
 elevenlabs_api_key = os.environ.get('ELEVENLABS_API_KEY')
 
@@ -47,6 +48,12 @@ if elevenlabs_api_key:
     client = ElevenLabs(api_key=elevenlabs_api_key)
 # --- FIM DA PARTE TÉCNICA ---
 
+# Rota principal para a interface do chatbot com voz
+@app.route('/')
+def serve_index():
+    return send_from_directory('.', 'index.html')
+
+# Rota do webhook que continua funcionando para os testes e para o backend
 @app.route('/webhook', methods=['POST'])
 def webhook():
     data = request.json
@@ -64,9 +71,10 @@ def webhook():
 
         if client:
             try:
+                # Usando sua voz personalizada
                 audio = client.generate(
                     text=text_response,
-                    voice="Adam",
+                    voice="Q6KIuDWIIqpbbWefMg8U", # <-- SUA VOZ AQUI!
                     model="eleven_multilingual_v2"
                 )
             except Exception as audio_error:
@@ -82,4 +90,3 @@ def webhook():
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001)
-
