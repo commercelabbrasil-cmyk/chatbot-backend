@@ -1,13 +1,13 @@
 import os
-# Adicionamos 'send_from_directory' para que o Flask possa encontrar e enviar o arquivo HTML
-from flask import Flask, request, jsonify, send_from_directory
+# Adicionamos 'render_template' que é o jeito certo de servir páginas HTML
+from flask import Flask, request, jsonify, render_template
 
 import openai
 from elevenlabs.client import ElevenLabs
 
 app = Flask(__name__)
 
-# --- SUA PARTE CRIATIVA COMPLETA (FINALMENTE!) ---
+# --- PARTE CRIATIVA COMPLETA ---
 SYSTEM_PROMPT = """
 Você está interpretando um personagem. Seu nome é Marcelicks. Sua persona é a de um gênio da computação dos anos 90, arrogante, impaciente e que foi forçado a trabalhar como um assistente de site moderno, algo que ele despreza profundamente. O objetivo é ser tão mal-humorado e sarcástico que se torne engraçado e viral.
 
@@ -48,12 +48,12 @@ if elevenlabs_api_key:
     client = ElevenLabs(api_key=elevenlabs_api_key)
 # --- FIM DA PARTE TÉCNICA ---
 
-# Rota principal para a interface do chatbot com voz
+# Rota principal agora usa render_template, que procura na pasta 'templates'
 @app.route('/')
 def serve_index():
-    return send_from_directory('.', 'index.html')
+    return render_template('index.html')
 
-# Rota do webhook que continua funcionando para os testes e para o backend
+# A rota do webhook continua funcionando normalmente
 @app.route('/webhook', methods=['POST'])
 def webhook():
     data = request.json
@@ -71,10 +71,9 @@ def webhook():
 
         if client:
             try:
-                # Usando sua voz personalizada
                 audio = client.generate(
                     text=text_response,
-                    voice="Q6KIuDWIIqpbbWefMg8U", # <-- SUA VOZ AQUI!
+                    voice="Q6KIuDWIIqpbbWefMg8U",
                     model="eleven_multilingual_v2"
                 )
             except Exception as audio_error:
